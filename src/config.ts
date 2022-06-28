@@ -32,8 +32,7 @@ export default {
     cors: {
       methods: ['GET', 'POST'],
       origin: [
-        'http://localhost:3000',
-        'http://192.168.15.101:3000',
+        'http://unkn.s3-website-us-east-1.amazonaws.com',
       ],
     },
   },
