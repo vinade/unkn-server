@@ -1,5 +1,5 @@
 export default {
-  usesIp: false,
+  usesIp: true,
   fallbackUser: 'unknown',
   messages: {
     MAX_MESSAGE_SIZE: 2048,
@@ -32,7 +32,7 @@ export default {
     cors: {
       methods: ['GET', 'POST'],
       origin: [
-        'http://unkn.s3-website-us-east-1.amazonaws.com',
+        'http://localhost:3001',
       ],
     },
   },
