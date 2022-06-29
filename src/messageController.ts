@@ -15,17 +15,34 @@ function listenRoom(io:Server, socket: Socket) {
   socket.on(SocketAction.REGISTER_ROOM, (data: RegisterRoom) => {
     const userIp = config.usesIp ? socket.handshake.address : (data.userId || config.fallbackUser);
 
-    if (!rooms.registerRoom(data.roomId, data.userId, userIp, socket)) {
+    const registerAllowed = rooms.registerRoom({
+      roomId: data.roomId,
+      userId: data.userId,
+      userIp,
+      socket,
+    });
+
+    if (!registerAllowed) {
       return;
     }
 
-    rooms.sendToRoom(data.roomId, socket, SocketAction.USER_JOINED, {
-      id: uuidv4(),
-      nickname: data.nickname || data.userId.split('-')[0],
+    rooms.sendToRoom({
+      roomId: data.roomId,
+      socket,
+      action: SocketAction.USER_JOINED,
+      obj: {
+        id: uuidv4(),
+        nickname: data.nickname || data.userId.split('-')[0],
+      },
     });
 
-    rooms.sendToRoom(socket.id, io, SocketAction.ROOM_CONFIG, {
-      messages: config.messages,
+    rooms.sendToRoom({
+      roomId: socket.id,
+      socket: io,
+      action: SocketAction.ROOM_CONFIG,
+      obj: {
+        messages: config.messages,
+      },
     });
   });
 }
@@ -43,9 +60,15 @@ function listenMessages(io: Server, socket: Socket) {
     messageData.message = messageData.message.slice(0, config.messages.MAX_MESSAGE_SIZE);
     messageData.userId = rooms.getUserId(userIp);
 
-    rooms.sendToRoom(data.roomId, io, SocketAction.RECEIVE_MESSAGE, {
-      id: uuidv4(),
-      ...messageData,
+    rooms.sendToRoom({
+      roomId: data.roomId,
+      socket: io,
+      action: SocketAction.RECEIVE_MESSAGE,
+      obj: {
+        id: uuidv4(),
+        ...messageData,
+      },
+      userIp,
     });
   });
 }

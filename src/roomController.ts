@@ -3,6 +3,21 @@ import config from './config';
 import MessageLimitRule from './messageLimitRule';
 import { SocketAction } from './types';
 
+type RoomRgsParameters = {
+  roomId: string;
+  userId: string;
+  userIp: string;
+  socket: Socket;
+};
+
+type RoomMsgParameters = {
+  roomId: string;
+  socket: Socket | Server;
+  action: SocketAction;
+  obj: Object;
+  userIp?:string;
+};
+
 export default class RoomController {
   rooms:{
     [key:string]: {
@@ -53,7 +68,9 @@ export default class RoomController {
     return (this.rooms[roomId].users.length < config.roomRules.maxUsers);
   }
 
-  registerRoom(roomId: string, userId: string, userIp: string, socket: Socket): boolean {
+  registerRoom({
+    roomId, userId, userIp, socket,
+  }:RoomRgsParameters): boolean {
     if (!this.canRegister(roomId, userIp)) {
       return false;
     }
@@ -68,7 +85,19 @@ export default class RoomController {
     return true;
   }
 
-  sendToRoom(roomId: string, socket: Socket | Server, action: SocketAction, obj: Object) {
+  sendToRoom({
+    roomId, socket, action, obj, userIp,
+  }:RoomMsgParameters) {
+    if (!this.rooms[roomId] || !this.rooms[roomId].users) {
+      return;
+    }
+
+    if (userIp) {
+      if (!this.rooms[roomId].users.includes(userIp)) {
+        return;
+      }
+    }
+
     socket.to(roomId).emit(action, obj);
     this.updateRoomTimestamp(roomId);
   }
